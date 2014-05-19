@@ -57,6 +57,7 @@
      <Compile Include="Assets\QuickPath\Scripts\Node\qpNodeScript.cs" />
      <Compile Include="Assets\QuickPath\Scripts\Node\qpPointNode.cs" />
      <Compile Include="Assets\QuickPath\Scripts\qpGrid.cs" />
+     <Compile Include="Assets\invisibleGrid.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
