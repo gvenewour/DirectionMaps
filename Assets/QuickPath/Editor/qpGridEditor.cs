@@ -46,10 +46,14 @@ public class qpGridEditor : Editor
     {
         float flo;
         string showstr = "";
-        if (_grid.UpRaycastStart != 0) showstr = _grid.UpRaycastStart.ToString();
+        if (_grid.UpRaycastStart != 0) {
+            showstr = _grid.UpRaycastStart.ToString();
+        }
         GUILayout.Label("Highest Point");
         string str = GUILayout.TextField(showstr, EditorStyles.numberField);
-        if (float.TryParse(str, out flo)) _grid.UpRaycastStart = flo;
+        if (float.TryParse(str, out flo)) {
+            _grid.UpRaycastStart = flo;
+        }
         else _grid.UpRaycastStart = 0;
     }
     private void _showLowestPoint()

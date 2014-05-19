@@ -36,9 +36,9 @@ public class qpGrid : MonoBehaviour
     private List<Vector3> _lineRayStarts = new List<Vector3>();
     private List<Vector3> _lineRayEnds = new List<Vector3>();
     private qpManager _manager;
-
-    private List<GameObject> invisibleGrid;
-
+    
+    private List<GameObject> _invisibleGrid = new List<GameObject>();
+    
     public void Awake () {
         //Generate new nodes with raycast collision detection
         Debug.Log("all nodes:" + allNodes.Count);
@@ -116,6 +116,17 @@ public class qpGrid : MonoBehaviour
         return (placeNode);
     }
 
+    /*private void _createInvisibleGrid()
+    {
+        DisallowedTags.Add ("Obstacles");
+        GameObject respawn = GameObject.FindWithTag("grid");
+        respawn.transform = new Vector3 (startCoordinates.x - 1, startCoordinates.y - 1, startCoordinates.z - 1);
+
+        GameObject nodeForRaycast = Instantiate(respawn) as GameObject;
+        
+    }*/
+
+
     private void _generateGrid()
     {
         _lineRayEnds = new List<Vector3>();
@@ -123,123 +134,120 @@ public class qpGrid : MonoBehaviour
 
         Vector3 size = new Vector3(Mathf.Abs(startCoordinates.x - endCoordinates.x), Mathf.Abs(startCoordinates.y - endCoordinates.y), Mathf.Abs(startCoordinates.z - endCoordinates.z));
 
-        int numOfNodesInX = (int)(size.x / step);
-        int numOfNodesInY = (int)(size.y / step);
-        int numOfNodesInZ = (int)(size.z / step);
+         int numOfNodesInX = (int)(size.x / step);
+         int numOfNodesInY = (int)(size.y / step);
+         int numOfNodesInZ = (int)(size.z / step);
 
         gridNodes = new qpNode[numOfNodesInX + 2, numOfNodesInY + 2, numOfNodesInZ + 2];
 
         int numOfNodesInXZLayer = numOfNodesInX * numOfNodesInZ;
 
         for (int y = 0; y < numOfNodesInY; y++) {
-            for (int nodeIndex = 0; nodeIndex < numOfNodesInXZLayer; nodeIndex++) {
+            for (int z = 0; z < numOfNodesInZ; z++) {
+                for (int x = 0; x < numOfNodesInX; x++) {
 
-                Vector3 rayCastPositionStart = Vector3.zero;
-                Vector3 rayDirection = Vector3.zero;
-
-                int row = (int)Mathf.Floor(nodeIndex * step / size.x);
-                float x = ((nodeIndex * step) - (row * size.x)) + startCoordinates.x;
-                float z = (row * step) + startCoordinates.z;
-
-                if (UpDirection == Axis.Y) {
-                    rayCastPositionStart = new Vector3(x, UpRaycastStart, z);
-                    rayDirection = new Vector3(0, -1f);
-                }
-
-                Ray ray = new Ray(rayCastPositionStart, rayDirection);
-                qpGridNode gridNode = null;
-                Vector3 point = Vector3.zero;
-
-                if (_nodeCanBePlaced(out point, ray)) {                        //Collision detected on floor
-                    gridNode = new qpGridNode(point);
-                    allNodes.Add(gridNode);
+                    Vector3 rayCastPositionStart = Vector3.zero;
+                    Vector3 rayDirection = Vector3.zero;
+                    
+                    float coordX = startCoordinates.x + x;
+                    float coordY = startCoordinates.y + y;
+                    float coordZ = startCoordinates.z + z;
 
                     if (UpDirection == Axis.Y) {
-                        rayCastPositionStart.y = point.y + 1;
+                        rayCastPositionStart = new Vector3(coordX, UpRaycastStart, coordZ);
+                        rayDirection = new Vector3(0, -1f);
                     }
 
-                    if (point != Vector3.zero) {
-                        _lineRayEnds.Add(point);
-                        _lineRayStarts.Add(rayCastPositionStart);
+                    Vector3 point = new Vector3(coordX, coordY, coordZ);
+                    qpGridNode gridNode = null;
+
+                    LayerMask layerMask = -1; //LayerMask.NameToLayer("Obstacles");
+                    bool nodeCanBePlaced = !Physics.CheckSphere(point, step/*1.4142f*/, layerMask); // check point with raycast distance to the closest objects with 'obstacle' tag
+
+                    //bool nodeCanBePlaced = true;
+
+                    if (nodeCanBePlaced) {
+                        gridNode = new qpGridNode(point);
+                        gridNodes[x, y, z] = gridNode;
+                        allNodes.Add(gridNode);
+
+                        if (UpDirection == Axis.Y) {
+                            rayCastPositionStart.y = point.y + 1;
+                        }
+
+                        if (point != Vector3.zero) {
+                            _lineRayEnds.Add(point);
+                            _lineRayStarts.Add(rayCastPositionStart);
+                        }
                     }
-                }
 
-                int zindex = (int)Mathf.Floor(nodeIndex / (size.x / step));
-                int xindex = (int)(nodeIndex - (Mathf.Ceil(zindex * (size.x / step))));
-                //Debug.Log("i:" + i + " spread:" + spread + " dif.x:" + size.x + " dif.y:" + size.y + " row:" + row + " x:" + x + " z:" + z+" xindex:"+xindex+" zindex:"+zindex);
+                    if (gridNode != null) {  //Set connection for grid node
+                        if ((x - 1) >= 0) {
+                            if (gridNodes[x - 1, y, z] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x - 1, y, z]);
+                            }
 
-                gridNodes[xindex, y, zindex] = gridNode;
+                            if (y > 0) {
+                                if (gridNodes[x - 1, y - 1, z] != null) {
+                                    gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z], true);
+                                }
 
-                if (gridNode != null) {  //Set connection for grid node
-                    if ((xindex - 1) > 0) {
-                        if (gridNodes[xindex - 1, y, zindex] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex - 1, y, zindex]);
+                                if (gridNodes[x - 1, y - 1, z + 1] != null) {
+                                    gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z + 1]);
+                                }
+                            }
+
+                            if ((z - 1) >= 0) {
+                                if (gridNodes[x - 1, y, z - 1] != null) {
+                                    gridNode.SetMutualConnection(gridNodes[x - 1, y, z - 1], true);
+                                }
+
+                                if ((y > 0) && (gridNodes[x - 1, y - 1, z - 1] != null)) {
+                                    gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z - 1], true);
+                                }
+                            }
+                        }
+
+                        if ((z - 1) >= 0) {
+                            if (gridNodes[x, y, z - 1] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x, y, z - 1]);
+                            }
+
+                            if ((y > 0) && (gridNodes[x, y - 1, z - 1] != null)) {
+                                gridNode.SetMutualConnection(gridNodes[x, y - 1, z - 1], true);
+                            }
+
+                            if (gridNodes[x + 1, y, z - 1] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y, z - 1], true);
+                            }
+
+                            if ((y > 0) && (gridNodes[x + 1, y, z - 1] != null)) {
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z - 1], true);
+                            }
                         }
 
                         if (y > 0) {
-                            if (gridNodes[xindex - 1, y - 1, zindex] != null) {
-                                gridNode.SetMutualConnection(gridNodes[xindex - 1, y - 1, zindex], true);
+                            if (gridNodes[x, y - 1, z] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x, y - 1, z]);
                             }
 
-                            if (gridNodes[xindex - 1, y - 1, zindex + 1] != null) {
-                                gridNode.SetMutualConnection(gridNodes[xindex - 1, y - 1, zindex + 1]);
+                            if (gridNodes[x + 1, y - 1, z] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z]);
                             }
 
-                        }
-
-                        if ((zindex - 1) > 0) {
-                            if (gridNodes[xindex - 1, y, zindex - 1] != null) {
-                                gridNode.SetMutualConnection(gridNodes[xindex - 1, y, zindex - 1], true);
+                            if (gridNodes[x, y - 1, z + 1] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x, y - 1, z + 1]);
                             }
 
-                            if ((y > 0) && (gridNodes[xindex - 1, y - 1, zindex - 1] != null)) {
-                                gridNode.SetMutualConnection(gridNodes[xindex - 1, y - 1, zindex - 1], true);
+                            if (gridNodes[x + 1, y - 1, z + 1] != null) {
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z + 1]);
                             }
                         }
                     }
-
-                    if ((zindex - 1) > 0) {
-                        if (gridNodes[xindex, y, zindex - 1] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex, y, zindex - 1]);
-                        }
-
-                        if ((y > 0) && (gridNodes[xindex, y - 1, zindex - 1] != null)) {
-                            gridNode.SetMutualConnection(gridNodes[xindex, y - 1, zindex - 1], true);
-                        }
-
-                        if (gridNodes[xindex + 1, y, zindex - 1] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex + 1, y, zindex - 1], true);
-                        }
-
-                        if ((y > 0) && (gridNodes[xindex + 1, y, zindex - 1] != null)) {
-                            gridNode.SetMutualConnection(gridNodes[xindex + 1, y - 1, zindex - 1], true);
-                        }
-                    }
-
-                    if (y > 0) {
-                        if (gridNodes[xindex, y - 1, zindex] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex, y - 1, zindex]);
-                        }
-
-                        if (gridNodes[xindex + 1, y - 1, zindex] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex + 1, y - 1, zindex]);
-                        }
-
-                        if (gridNodes[xindex, y - 1, zindex + 1] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex, y - 1, zindex + 1]);
-                        }
-
-                        if (gridNodes[xindex + 1, y - 1, zindex + 1] != null) {
-                            gridNode.SetMutualConnection(gridNodes[xindex + 1, y - 1, zindex + 1]);
-                        }
-                    }
-
-
                 }
-
             }
-        }
 
+        }
         qpManager.Instance.RegisterNodes(allNodes);
     }
 
