@@ -10,12 +10,13 @@ public class qpPatrolObject : qpMoveObject {
     /// <summary>
     /// The path the object will move, when it reaches its end it will start over.
     /// </summary>
-    public List<Vector3> PatrolPath = new List<Vector3>();
+    public List<Vector3> PointsToPatrol = new List<Vector3>();
 
     /// <summary>
     /// Should the object reverse the path and walk it, when it finishes the path?
     /// </summary>
     public bool PingPong = true;
+    private bool _forward = true;
 
     /// <summary>
     /// Should the object perform an A* search algorithm between each point in the patrol path?
@@ -23,13 +24,20 @@ public class qpPatrolObject : qpMoveObject {
     public bool PathfindingBetweenPoints = false;
 
     /// <summary>
-    /// Inhertied method from MoveObject, called whenever destination has been reached.
+    /// Inherited method from MoveObject, called whenever destination has been reached.
     /// </summary>
     public override void FinishedPath()
     {
-        if (PingPong)Path.Reverse();
+        if (PingPong) {
+            if (PointsToPatrol.Count > 0) {
+                Vector3 destination = _forward ? PointsToPatrol[PointsToPatrol.Count - 1] : PointsToPatrol[0];
+                _forward = !_forward;
 
-        SetPath(Path);
+                base.Start();
+                List<qpNode> prePath = AStar(PreviousNode, qpManager.Instance.FindNodeClosestTo(destination));
+                SetPath(prePath);
+            }
+        }
     }
 
     /// <summary>
@@ -38,16 +46,12 @@ public class qpPatrolObject : qpMoveObject {
 	protected void Start () {
         base.Start();
 
-        if (!PathfindingBetweenPoints)
-        {
-            SetPath(PatrolPath);
-        }
-        if (PathfindingBetweenPoints)
-        {
+        if (!PathfindingBetweenPoints) {
+            SetPath(PointsToPatrol);
+        } else  {
             List<qpNode> _pathfindingPath = new List<qpNode>();
-            for (int i = 0; i < PatrolPath.Count-1; i++)
-            {
-                _pathfindingPath.AddRange(AStar(qpManager.Instance.FindNodeClosestTo(PatrolPath[i]), qpManager.Instance.FindNodeClosestTo(PatrolPath[i + 1])));
+            for (int i = 0; i < PointsToPatrol.Count - 1; i++) {
+                _pathfindingPath.AddRange(AStar(qpManager.Instance.FindNodeClosestTo(PointsToPatrol[i]), qpManager.Instance.FindNodeClosestTo(PointsToPatrol[i + 1])));
             }
             SetPath(_pathfindingPath);
         }

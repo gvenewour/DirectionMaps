@@ -1,10 +1,14 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\QuickPath\Scripts\qpGrid.cs">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\QuickPath\Scripts\AI\qpMoveObject.cs">
     <Files>
-      <File FileName="Assets\QuickPath\Scripts\qpGrid.cs" Line="82" Column="14" />
-      <File FileName="Assets\QuickPath\Editor\qpGridEditor.cs" Line="53" Column="19" />
       <File FileName="Assets\QuickPath\Scripts\qpGrid.cs" Line="1" Column="1" />
+      <File FileName="Assets\QuickPath\Scripts\GizmoGrid.cs" Line="1" Column="1" />
+      <File FileName="Assets\QuickPath\Scripts\AI\qpMoveObject.cs" Line="1" Column="1" />
+      <File FileName="Assets\QuickPath\Scripts\AI\qpPatrolObject.cs" Line="1" Column="1" />
+      <File FileName="Assets\SphereBehaviour.cs" Line="1" Column="1" />
+      <File FileName="Assets\QuickPath\Scripts\qpGrid.cs" Line="1" Column="1" />
+      <File FileName="Assets\QuickPath\Editor\qpGridEditor.cs" Line="1" Column="1" />
       <File FileName="d:\Documents\Unity Projects\QuickAstar\Assets\QuickPath\Scripts\Node\qpNode.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>

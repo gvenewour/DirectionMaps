@@ -3,11 +3,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading;
 
 // The Manager contains the most current nodes. Singleton.
 
 public sealed class qpManager :UnityEngine.Object
 {
+    public float collisionDistance = 1;
+    public Vector3 startCoordinates = new Vector3(-50, -50, -50);      // Start position from which to ray cast for terrain suitable for nodes.
+    public Vector3 endCoordinates = new Vector3(50, 50, 50);          // End position from which to ray cast for terrain suitable for nodes.
+    public int numOfNodesInX;
+    public int numOfNodesInY;
+    public int numOfNodesInZ;
+
+    public bool gridWasUpdated = false;
+
+    public Mutex _gridMutex = new Mutex();
+
+
     public List<qpNode> nodes = new List<qpNode>();
 
     private qpManager()
@@ -95,5 +108,14 @@ public sealed class qpManager :UnityEngine.Object
         return retList;
     }
 
+    public Vector3 getNodeOffsetCoordinate(Vector3 globalCoordinates)
+    {
+        Vector3 nodeIndexes = new Vector3(globalCoordinates.x, globalCoordinates.y, globalCoordinates.z);
+        globalCoordinates.x -= startCoordinates.x;
+        globalCoordinates.y -= startCoordinates.y;
+        globalCoordinates.z -= startCoordinates.z;
+
+        return nodeIndexes;
+    }
    
 }

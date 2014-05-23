@@ -73,6 +73,22 @@ public abstract class qpNode  {
             }
         }
     }
+
+    public void RemoveAllMutualConnections()
+    {
+        if (ContactedNodes != null) {
+            foreach(qpNode neighbour in ContactedNodes) {
+                RemoveMutualConnection(neighbour);
+            }
+        }
+
+        if (NonDiagonalContactedNodes != null) {
+            foreach (qpNode neighbour in NonDiagonalContactedNodes) {
+                RemoveMutualConnection(neighbour);
+            }
+        }
+    }
+
     protected void SetCoordinate(Vector3 newCoordinate)
     {
         _coordinates = newCoordinate;

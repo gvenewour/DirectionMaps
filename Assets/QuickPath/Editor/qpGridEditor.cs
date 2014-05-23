@@ -12,7 +12,7 @@ public class qpGridEditor : Editor
     //    PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath("Assets/QuickPath/Prefabs/Waypoint.prefab", typeof(GameObject)));
     //}
     private qpGrid _grid;
-    private string spread = "1";
+    
     public override void OnInspectorGUI()
     {
         //string[] strings =new [] { "foo", "foobar" };
@@ -26,6 +26,7 @@ public class qpGridEditor : Editor
         _grid = (qpGrid)target;
 
         _grid.DrawInEditor = (GUILayout.Toggle(_grid.DrawInEditor, "Draw In Editor"));
+        _grid.ShowNonTraversable = (GUILayout.Toggle(_grid.ShowNonTraversable, "Draw non traversable nodes"));
         GUIStyle style = new GUIStyle();
         style.fixedWidth = 200;
         style.contentOffset = new Vector2(300, 0);
@@ -39,7 +40,9 @@ public class qpGridEditor : Editor
         _showNodeStep();
         _showDisallowedTags();
         _showIgnoreTags();
-        if (GUI.changed) EditorUtility.SetDirty(target);
+        if (GUI.changed) {
+            EditorUtility.SetDirty(target);
+        }
 
     }
     private void _showHighestPoint()

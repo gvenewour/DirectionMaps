@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 [AddComponentMenu("QuickPath/Grid")]
 [ExecuteInEditMode]
 /// <summary>
@@ -24,6 +25,8 @@ public class qpGrid : MonoBehaviour
     public List<string> IgnoreTags = new List<string>();        //? List of tags that when raycasted against will not create node.
 
     public bool DrawInEditor = true;    // Draws a line at each node, and draws a line between each connection between two nodes. Helpful when baking grids.
+    public bool ShowNonTraversable = false;
+    public float collisionDistance = 1;
 
     public enum Axis {Y=4}; //The Axises
 
@@ -37,9 +40,9 @@ public class qpGrid : MonoBehaviour
     private List<Vector3> _lineRayEnds = new List<Vector3>();
     private qpManager _manager;
     
-    private List<GameObject> _invisibleGrid = new List<GameObject>();
-    
+   
     public void Awake () {
+
         //Generate new nodes with raycast collision detection
         Debug.Log("all nodes:" + allNodes.Count);
         qpManager.Instance.RegisterNodes(allNodes);
@@ -74,16 +77,32 @@ public class qpGrid : MonoBehaviour
         //Debug.Log("nodes:" + allNodes.Count+" disallowed tags:"+DisallowedTags.Count+"DisallowedTag:"+DisallowedTags[2]);
     }
 
+
     public void Update()
     {
         if (DrawInEditor) {
-            for (int i = _lineRayStarts.Count; i > 0; i--) {
-                Debug.DrawLine(_lineRayStarts[i - 1], _lineRayEnds[i - 1],Color.blue,0,true);
-            }
-
+//             for (int i = _lineRayStarts.Count; i > 0; i--) {
+//                 Debug.DrawLine(_lineRayStarts[i - 1], _lineRayEnds[i - 1],Color.blue,0,true);
+//             }
             foreach (qpNode node in allNodes) {
                 foreach (qpNode neighbour in node.ContactedNodes) {
-                    Debug.DrawLine(node.GetCoordinates(), neighbour.GetCoordinates(), new Color(0,0,1,.7f), 0, true);
+                    if (node.traversable) {
+                        Debug.DrawLine(node.GetCoordinates(), neighbour.GetCoordinates(), Color.blue, 0, true);
+                    }
+
+//                     if (ShowNonTraversable && !node.traversable) {
+//                         Debug.DrawLine(node.GetCoordinates(), neighbour.GetCoordinates(), Color.red, 0, true);
+//                     }
+                }
+            }
+        }
+
+        if (ShowNonTraversable) {
+            foreach (qpNode node in allNodes) {
+                foreach (qpNode neighbour in node.ContactedNodes) {
+                    if (!node.traversable) {
+                        Debug.DrawLine(node.GetCoordinates(), neighbour.GetCoordinates(), Color.grey, 0, true);
+                    }
                 }
             }
         }
@@ -116,17 +135,6 @@ public class qpGrid : MonoBehaviour
         return (placeNode);
     }
 
-    /*private void _createInvisibleGrid()
-    {
-        DisallowedTags.Add ("Obstacles");
-        GameObject respawn = GameObject.FindWithTag("grid");
-        respawn.transform = new Vector3 (startCoordinates.x - 1, startCoordinates.y - 1, startCoordinates.z - 1);
-
-        GameObject nodeForRaycast = Instantiate(respawn) as GameObject;
-        
-    }*/
-
-
     private void _generateGrid()
     {
         _lineRayEnds = new List<Vector3>();
@@ -139,8 +147,6 @@ public class qpGrid : MonoBehaviour
          int numOfNodesInZ = (int)(size.z / step);
 
         gridNodes = new qpNode[numOfNodesInX + 2, numOfNodesInY + 2, numOfNodesInZ + 2];
-
-        int numOfNodesInXZLayer = numOfNodesInX * numOfNodesInZ;
 
         for (int y = 0; y < numOfNodesInY; y++) {
             for (int z = 0; z < numOfNodesInZ; z++) {
@@ -161,24 +167,23 @@ public class qpGrid : MonoBehaviour
                     Vector3 point = new Vector3(coordX, coordY, coordZ);
                     qpGridNode gridNode = null;
 
-                    LayerMask layerMask = -1; //LayerMask.NameToLayer("Obstacles");
-                    bool nodeCanBePlaced = !Physics.CheckSphere(point, step/*1.4142f*/, layerMask); // check point with raycast distance to the closest objects with 'obstacle' tag
+                    gridNode = new qpGridNode(point);
+                    int layerIndex = LayerMask.NameToLayer("Obstacles");
+                    bool nodeCanBePlaced = !Physics.CheckSphere(point, step/*1.4142f*/, 1 << layerIndex); // check point with raycast distance to the closest objects with 'obstacle' tag
+                    if (!nodeCanBePlaced) {
+                        gridNode.traversable = false;
+                    }
 
-                    //bool nodeCanBePlaced = true;
+                    gridNodes[x, y, z] = gridNode;
+                    allNodes.Add(gridNode);
 
-                    if (nodeCanBePlaced) {
-                        gridNode = new qpGridNode(point);
-                        gridNodes[x, y, z] = gridNode;
-                        allNodes.Add(gridNode);
+                    if (UpDirection == Axis.Y) {
+                        rayCastPositionStart.y = point.y + 1;
+                    }
 
-                        if (UpDirection == Axis.Y) {
-                            rayCastPositionStart.y = point.y + 1;
-                        }
-
-                        if (point != Vector3.zero) {
-                            _lineRayEnds.Add(point);
-                            _lineRayStarts.Add(rayCastPositionStart);
-                        }
+                    if (point != Vector3.zero) {
+                        _lineRayEnds.Add(point);
+                        _lineRayStarts.Add(rayCastPositionStart);
                     }
 
                     if (gridNode != null) {  //Set connection for grid node
@@ -249,7 +254,14 @@ public class qpGrid : MonoBehaviour
 
         }
         qpManager.Instance.RegisterNodes(allNodes);
+        qpManager.Instance.startCoordinates = startCoordinates;
+        qpManager.Instance.endCoordinates = endCoordinates;
+        qpManager.Instance.numOfNodesInX = numOfNodesInX;
+        qpManager.Instance.numOfNodesInY = numOfNodesInY;
+        qpManager.Instance.numOfNodesInZ = numOfNodesInZ;
+        qpManager.Instance.collisionDistance = collisionDistance;
     }
+
 
     //void OnDisable()
     //{

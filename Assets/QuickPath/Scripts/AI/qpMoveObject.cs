@@ -32,10 +32,10 @@ public class qpMoveObject : MonoBehaviour {
 
     protected void FixedUpdate()
     {
-        _verifyNodes();
+        _verifyNodes();       
         _move();
-        if (DrawPathInEditor && Path.Count > 0)
-        {
+
+        if (DrawPathInEditor && Path.Count > 0) {
             for (int i = 1; i < Path.Count; i++)
             {
                 qpNode prevNode = Path[i - 1];
@@ -66,7 +66,9 @@ public class qpMoveObject : MonoBehaviour {
             _moveCounter = 0;
             DestinationCoordinate = path[path.Count - 1].GetCoordinates();
             Path = path;
-            if (DrawPathInEditor) _drawDestination();
+            if (DrawPathInEditor) {
+                _drawDestination();
+            }
         }
     }
 
@@ -81,8 +83,10 @@ public class qpMoveObject : MonoBehaviour {
                 _list.Add(qpManager.Instance.FindNodeClosestTo(path[i]));
             }
             Path = _list;
-            
-            if (DrawPathInEditor) _drawDestination();
+
+            if (DrawPathInEditor) {
+                _drawDestination();
+            }
         }
     }
 
@@ -117,68 +121,73 @@ public class qpMoveObject : MonoBehaviour {
         int astarSteps = 0;
         while (openList.Count > 0 && !searchComplete)      //ALGORITHM STARTS HERE.
         {
-            astarSteps++;
-            if (candidate == end)                   //If current candidate is end, the algorithm has been completed and the path can be built.
-            {
-                DestinationNode = end;
-                searchComplete = true;
-                bool pathComplete = false;
-                qpNode node = end;
-                while (!pathComplete) {
-                    path.Add(node);
-                    if (node == start) {
-                        pathComplete = true;
+            if (!searchComplete) {
+                astarSteps++;
+                if (candidate == end) {                //If current candidate is end, the algorithm has been completed and the path can be built.
+                    DestinationNode = end;
+                    searchComplete = true;
+                    bool pathComplete = false;
+                    qpNode node = end;
+                    while (!pathComplete) {
+                        path.Add(node);
+                        if (node == start) {
+                            pathComplete = true;
+                        }
+                        node = node.GetParent();
                     }
-                    node = node.GetParent();
                 }
-            }
-            
-            List<qpNode> allNodes = (CanMoveDiagonally) ? candidate.ContactedNodes : candidate.NonDiagonalContactedNodes;
-            List<qpNode> potentialNodes = new List<qpNode>();
-            
-            foreach (qpNode n in allNodes) {
-                if (n.traversable) potentialNodes.Add(n);
-            }
 
-            foreach (qpNode n in potentialNodes) {
-                bool inClosed = closedList.Contains(n);
-                bool inOpen = openList.Contains(n);
+                List<qpNode> allNodes = (CanMoveDiagonally) ? candidate.ContactedNodes : candidate.NonDiagonalContactedNodes;
+                List<qpNode> potentialNodes = new List<qpNode>();
 
-                if (!inClosed && !inOpen) {             //Mark candidate as parent if not in open nor closed.
-                    n.SetParent(candidate);
-                    openList.Add(n);
-                } else if (inOpen) {                    //But if in open, then calculate which is the better parent: Candidate or current parent.
-                    float math2 = n.GetParent().GetG();
-                    float math1 = candidate.GetG();
-                    if (math2 > math1) {                //candidate is the better parent as it has a lower combined g value.
+                foreach (qpNode n in allNodes) {
+                    if (n.traversable) {
+                        potentialNodes.Add(n);
+                    }
+                }
+
+                foreach (qpNode n in potentialNodes) {
+                    bool inClosed = closedList.Contains(n);
+                    bool inOpen = openList.Contains(n);
+
+                    if (!inClosed && !inOpen) {             //Mark candidate as parent if not in open nor closed.
                         n.SetParent(candidate);
+                        openList.Add(n);
+                    } else if (inOpen) {                    //But if in open, then calculate which is the better parent: Candidate or current parent.
+                        float math2 = n.GetParent().GetG();
+                        float math1 = candidate.GetG();
+                        if (math2 > math1) {                //candidate is the better parent as it has a lower combined g value.
+                            n.SetParent(candidate);
+                        }
                     }
                 }
-            }
 
-            //Calculate h, g and total
-            if (openList.Count == 0) {
-                break;
-            }
+                //Calculate h, g and total
+                if (openList.Count == 0) {
+                    break;
+                }
 
-            openList.RemoveAt(0);
+                openList.RemoveAt(0);
 
-            if (openList.Count == 0) {
-                break;
-            }
+                if (openList.Count == 0) {
+                    break;
+                }
 
-            for (int i = 0; i < openList.Count; i++) {  //the below one-lined for loop,if conditional and method call updates all nodes in openlist.
-                openList[i].CalculateTotal(start, end);
-            }
+                for (int i = 0; i < openList.Count; i++) {  //the below one-lined for loop,if conditional and method call updates all nodes in openlist.
+                    openList[i].CalculateTotal(start, end);
+                }
 
-            openList.Sort(delegate(qpNode node1, qpNode node2)
-            {
-                return node1.GetTotal().CompareTo(node2.GetTotal());
-            });
+                openList.Sort(delegate(qpNode node1, qpNode node2) {
+                    return node1.GetTotal().CompareTo(node2.GetTotal());
+                });
 
-            candidate = openList[0];
-            closedList.Add(candidate);
+                candidate = openList[0];
+                closedList.Add(candidate);
+            } 
         }
+
+
+
         //Debug.Log("astar completed in " + astarSteps + " steps. Path found:"+complete);
         path.Reverse();
         return path;
@@ -187,14 +196,14 @@ public class qpMoveObject : MonoBehaviour {
     private void _verifyNodes()
     {
         bool outdated = false;
+
         if (_getNearNode() != null) {
             if (_getNearNode().outdated) {
                 outdated = true;
             }
 
             if (DestinationNode != null) {
-                if (DestinationNode.outdated)
-                {
+                if (DestinationNode.outdated) {
                     outdated = true;
                 }
             }
@@ -208,10 +217,19 @@ public class qpMoveObject : MonoBehaviour {
                 }
             }
 
+            qpManager.Instance._gridMutex.WaitOne();
+                if (qpManager.Instance.gridWasUpdated) {
+                    qpManager.Instance.gridWasUpdated = false;
+                    outdated = true;
+                }
+            qpManager.Instance._gridMutex.ReleaseMutex();
+
             if (outdated) {
+                Debug.Log("OUTDATED, creating new path");
                 CreatePathStartMoving(DestinationCoordinate);
             }
         }
+        
     }
 
     private void _move()
@@ -224,11 +242,13 @@ public class qpMoveObject : MonoBehaviour {
                 {
                     PreviousNode = Path[_moveCounter];
                     _moveCounter++;
-                    if (_moveCounter < Path.Count) NextNode = Path[_moveCounter];
-                    else FinishedPath();
+                    if (_moveCounter < Path.Count) {
+                        NextNode = Path[_moveCounter];
+                    } else {
+                        FinishedPath();
+                    }
                 }
-            }
-            else  {
+            } else  {
                 Moving = false;
             }
         }
@@ -241,7 +261,7 @@ public class qpMoveObject : MonoBehaviour {
         if (result != null) {
             if (result.outdated) {
                 FindClosestNode();
-                return PreviousNode;
+                return (PreviousNode);
             }
         }
         return result;
