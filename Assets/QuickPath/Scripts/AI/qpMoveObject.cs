@@ -46,12 +46,12 @@ public class qpMoveObject : MonoBehaviour {
 
     public void CreatePathStartMoving(qpNode destination)    // Creates a path to the desired node, and begins walking the path
     {
-        SetPath(AStar(_getNearNode(), destination));
+        SetPath(AStar(_getNearestNode(), destination));
     }
 
     public void CreatePathStartMoving(Vector3 destination)
     {
-        SetPath(AStar(_getNearNode(), qpManager.Instance.FindNodeClosestTo(destination)));
+        SetPath(AStar(_getNearestNode(), qpManager.Instance.FindNodeClosestTo(destination)));
     }
 
     public void SetPath(List<qpNode> path)  // Hands the object a new path, which it will immediately begin to walk
@@ -197,8 +197,8 @@ public class qpMoveObject : MonoBehaviour {
     {
         bool outdated = false;
 
-        if (_getNearNode() != null) {
-            if (_getNearNode().outdated) {
+        if (_getNearestNode() != null) {
+            if (_getNearestNode().outdated) {
                 outdated = true;
             }
 
@@ -254,7 +254,7 @@ public class qpMoveObject : MonoBehaviour {
         }
     }
     
-    private qpNode _getNearNode()
+    private qpNode _getNearestNode()
     {
         qpNode result = (NextNode == null ||!NextNode.outdated) ? PreviousNode : NextNode;
         

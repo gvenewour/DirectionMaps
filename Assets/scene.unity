@@ -124,7 +124,7 @@ SphereCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: .5
+  m_Radius: .200000003
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &83107218
 MeshFilter:
@@ -140,8 +140,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 83107215}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 20, y: 10, z: 30}
-  m_LocalScale: {x: 10, y: 20, z: 5}
+  m_LocalPosition: {x: 7, y: 10, z: 7}
+  m_LocalScale: {x: 7, y: 7, z: 7}
   m_Children: []
   m_Father: {fileID: 0}
 --- !u!114 &83107220
@@ -253,7 +253,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startCoordinates: {x: .5, y: 0, z: .5}
-  endCoordinates: {x: 50, y: 50, z: 50}
+  endCoordinates: {x: 20, y: 20, z: 20}
   DisallowedTags:
   - Obstacles
   IgnoreTags: []
@@ -423,7 +423,7 @@ Transform:
   m_GameObject: {fileID: 1713733824}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: .5, y: 0, z: .5}
-  m_LocalScale: {x: .200000003, y: .200000003, z: .200000003}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
 --- !u!114 &1713733829
@@ -440,13 +440,13 @@ MonoBehaviour:
   Moving: 0
   CanMoveDiagonally: 1
   SpillDistance: .100000001
-  Speed: 1
+  Speed: 5
   Offset: {x: 0, y: 0, z: 0}
   DrawPathInEditor: 1
   destinationMarker: {fileID: 0}
   PointsToPatrol:
   - {x: 0, y: 0, z: 0}
-  - {x: 40, y: 50, z: 40}
+  - {x: 17, y: 15, z: 8}
   PingPong: 1
   PathfindingBetweenPoints: 1
 --- !u!54 &1713733830
