@@ -101,7 +101,7 @@ public abstract class qpNode  {
 
     #region Pathfinding
 
-    public float CalculateTotal(qpNode start, qpNode end)
+    public float CalculateTotal(qpNode previousNode, qpNode end)
     {
         _h = CalculateH(end);
         if (_parent != null) {
@@ -110,9 +110,21 @@ public abstract class qpNode  {
             _g = 1;
         }
 
-        _total = _g + _h;
-        
+        float penalty = 0;
+
+        if (previousNode != null) {
+            Vector3 movementVector = new Vector3(_coordinates.x - previousNode.GetCoordinates().x, _coordinates.y - previousNode.GetCoordinates().y, _coordinates.z - previousNode.GetCoordinates().z);
+            Debug.Log("Movement vector (not normalized): " + movementVector);
+            movementVector.Normalize();
+
+            float dotProductAB = Vector3.Dot(previousNode._DirectionVector, movementVector);
+            float dotProductBA = Vector3.Dot(_DirectionVector, movementVector);
+            penalty = qpManager.Instance.edgeCost + 0.25f * qpManager.Instance.maxPenalty * (2 - dotProductAB - dotProductBA);
+        }
+
+        _total = (_g + penalty) + _h;
         return _total;
+
     }
 
     public float CalculateH(qpNode end)
