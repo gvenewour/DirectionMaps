@@ -26,6 +26,8 @@ public class qpMoveObject : MonoBehaviour {
     public GameObject destinationMarker;
     private int _moveCounter = 0;
 
+    protected bool _forward = true;
+
 	public void Start () {
         FindClosestNode();
 	}
@@ -46,12 +48,12 @@ public class qpMoveObject : MonoBehaviour {
 
     public void CreatePathStartMoving(qpNode destination)    // Creates a path to the desired node, and begins walking the path
     {
-        SetPath(AStar(_getNearNode(), destination));
+        SetPath(AStar(_getNearestNode(), destination));
     }
 
     public void CreatePathStartMoving(Vector3 destination)
     {
-        SetPath(AStar(_getNearNode(), qpManager.Instance.FindNodeClosestTo(destination)));
+        SetPath(AStar(_getNearestNode(), qpManager.Instance.FindNodeClosestTo(destination)));
     }
 
     public void SetPath(List<qpNode> path)  // Hands the object a new path, which it will immediately begin to walk
@@ -166,20 +168,24 @@ public class qpMoveObject : MonoBehaviour {
                 if (openList.Count == 0) {
                     break;
                 }
-
                 openList.RemoveAt(0);
-
                 if (openList.Count == 0) {
                     break;
                 }
 
                 for (int i = 0; i < openList.Count; i++) {  //the below one-lined for loop,if conditional and method call updates all nodes in openlist.
-                    openList[i].CalculateTotal(start, end);
+
+                    qpNode current = closedList[closedList.Count - 1];
+                    openList[i].CalculateTotal(current, end ,_forward);
                 }
 
+                //i need the last one from the closedList
+
+
                 openList.Sort(delegate(qpNode node1, qpNode node2) {
-                    return node1.GetTotal().CompareTo(node2.GetTotal());
-                });
+                                return node1.GetTotal().CompareTo(node2.GetTotal());
+                              }
+                             );
 
                 candidate = openList[0];
                 closedList.Add(candidate);
@@ -197,8 +203,8 @@ public class qpMoveObject : MonoBehaviour {
     {
         bool outdated = false;
 
-        if (_getNearNode() != null) {
-            if (_getNearNode().outdated) {
+        if (_getNearestNode() != null) {
+            if (_getNearestNode().outdated) {
                 outdated = true;
             }
 
@@ -237,24 +243,46 @@ public class qpMoveObject : MonoBehaviour {
         if (Path != null) {
             if (_moveCounter < Path.Count) {
                 Moving = true;
+
+                //Direction Maps
+                qpNode previousNode = (Path.Count > 0) ? Path[_moveCounter - 1] : null;
+                qpNode currentNode = Path[_moveCounter];
+                Vector3 EnterMovementVector = new Vector3(currentNode.GetCoordinates().x - previousNode.GetCoordinates().x, currentNode.GetCoordinates().y - previousNode.GetCoordinates().y, currentNode.GetCoordinates().z - previousNode.GetCoordinates().z);
+                Debug.Log("Enter Movement vector (not normalized): " + EnterMovementVector);
+                EnterMovementVector.Normalize();
+                currentNode._DirectionVector.x = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.x + qpManager.Instance.learningRate * EnterMovementVector.x;
+                currentNode._DirectionVector.y = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.y + qpManager.Instance.learningRate * EnterMovementVector.y;
+                currentNode._DirectionVector.z = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.z + qpManager.Instance.learningRate * EnterMovementVector.z;
+                //
+
                 transform.position = Vector3.MoveTowards(transform.position, Path[_moveCounter].GetCoordinates() + Offset, Time.deltaTime * Speed);
-                if (Vector3.Distance(transform.position, Path[_moveCounter].GetCoordinates() + Offset) < SpillDistance)
-                {
-                    PreviousNode = Path[_moveCounter];
+                if (Vector3.Distance(transform.position, Path[_moveCounter].GetCoordinates() + Offset) < SpillDistance) {
+                    PreviousNode = currentNode;
                     _moveCounter++;
                     if (_moveCounter < Path.Count) {
                         NextNode = Path[_moveCounter];
+
+                        //Direction Maps
+                        Vector3 ExitMovementVector = new Vector3(NextNode.GetCoordinates().x - currentNode.GetCoordinates().x, NextNode.GetCoordinates().y - currentNode.GetCoordinates().y, NextNode.GetCoordinates().z - currentNode.GetCoordinates().z);
+                        Debug.Log("Movement vector (not normalized): " + ExitMovementVector);
+                        EnterMovementVector.Normalize();
+                        currentNode._DirectionVector.x = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.x + qpManager.Instance.learningRate * ExitMovementVector.x;
+                        currentNode._DirectionVector.y = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.y + qpManager.Instance.learningRate * ExitMovementVector.y;
+                        currentNode._DirectionVector.z = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.z + qpManager.Instance.learningRate * ExitMovementVector.z;
+                        //
+
                     } else {
                         FinishedPath();
                     }
                 }
+
             } else  {
                 Moving = false;
             }
         }
     }
     
-    private qpNode _getNearNode()
+    private qpNode _getNearestNode()
     {
         qpNode result = (NextNode == null ||!NextNode.outdated) ? PreviousNode : NextNode;
         

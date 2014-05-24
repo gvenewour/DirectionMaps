@@ -17,9 +17,14 @@ public sealed class qpManager :UnityEngine.Object
     public int numOfNodesInZ;
 
     public bool gridWasUpdated = false;
-
     public Mutex _gridMutex = new Mutex();
 
+    //DIRECTION MAPS #start
+    public int maxPenalty = 10;
+    public int edgeCost = 2;
+    public float learningRate = 0.5f;
+
+    //DIRECTION MAPS #end
 
     public List<qpNode> nodes = new List<qpNode>();
 
@@ -73,15 +78,12 @@ public sealed class qpManager :UnityEngine.Object
             Debug.LogError("Object can't move because there are no nodes(you haven't baked a qpGrid or instantiated any qpWayPoints)");
             return null;
         } else {
-            //we assume waypoints or grid has been made.
-            //Debug.Log("nodes:" + nodes);
-            //Debug.Log("nodes length:" + nodes.Count);
             qpNode returnNode;
-            returnNode = nodes[0];
+            returnNode = nodes[nodes.Count - 1];
 
             float distance = Vector3.Distance(returnNode.GetCoordinates(), givenPoint);
             
-            for (int i = 1; i < nodes.Count; i++) {
+            for (int i = nodes.Count - 2; i >=0 ; i--) {
                 if (nodes[i] != null) {
                     if (Vector3.Distance(nodes[i].GetCoordinates(), givenPoint) < distance) {
                         distance = Vector3.Distance(nodes[i].GetCoordinates(), givenPoint);
@@ -117,5 +119,11 @@ public sealed class qpManager :UnityEngine.Object
 
         return nodeIndexes;
     }
-   
+
+    public void OnDrawGizmos()
+    {
+
+    }
+
+
 }

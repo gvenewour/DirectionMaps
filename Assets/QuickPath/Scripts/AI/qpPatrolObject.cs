@@ -16,7 +16,6 @@ public class qpPatrolObject : qpMoveObject {
     /// Should the object reverse the path and walk it, when it finishes the path?
     /// </summary>
     public bool PingPong = true;
-    private bool _forward = true;
 
     /// <summary>
     /// Should the object perform an A* search algorithm between each point in the patrol path?
