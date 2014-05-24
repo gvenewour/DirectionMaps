@@ -20,6 +20,13 @@ public sealed class qpManager :UnityEngine.Object
 
     public Mutex _gridMutex = new Mutex();
 
+    //DIRECTION MAPS #start
+    public int maxPenalty = 10;
+    public int edgeCost = 2;
+    public float learningRate = 0.5f;
+
+    //DIRECTION MAPS #end
+
 
     public List<qpNode> nodes = new List<qpNode>();
 

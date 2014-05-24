@@ -16,6 +16,11 @@ public abstract class qpNode  {
     private qpNode _parent;
     private Vector3 _coordinates;
 
+
+    //DIRECTION MAPS #start
+    public Vector3 _DirectionVector;
+    //DIRECTION MAPS #end
+
     public Vector3 GetCoordinates()
     {
         return _coordinates;
