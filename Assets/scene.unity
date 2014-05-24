@@ -446,8 +446,8 @@ MonoBehaviour:
   destinationMarker: {fileID: 0}
   PointsToPatrol:
   - {x: 0, y: 0, z: 0}
-  - {x: 17, y: 15, z: 8}
-  PingPong: 1
+  - {x: 7, y: 8, z: 5}
+  PingPong: 0
   PathfindingBetweenPoints: 1
 --- !u!54 &1713733830
 Rigidbody:

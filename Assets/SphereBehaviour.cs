@@ -45,6 +45,7 @@ public class SphereBehaviour : MonoBehaviour {
                         qpNode node = _manager.nodes[(y * _manager.numOfNodesInX * _manager.numOfNodesInZ) + (z * _manager.numOfNodesInX + x)];
                         if (node != null) {
                             SetTraverseState(ref node);
+                            node._DirectionVector = new Vector3(0, 0, 0);
                             //node.outdated = true;
                         }
                     }

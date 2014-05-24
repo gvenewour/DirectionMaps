@@ -117,6 +117,7 @@ public class qpMoveObject : MonoBehaviour {
         }
 
         openList.Add(start);
+		start.CalculateTotal(end);
 
         int astarSteps = 0;
         while (openList.Count > 0 && !searchComplete)      //ALGORITHM STARTS HERE.
@@ -140,28 +141,28 @@ public class qpMoveObject : MonoBehaviour {
                 List<qpNode> allNodes = (CanMoveDiagonally) ? candidate.ContactedNodes : candidate.NonDiagonalContactedNodes;
                 List<qpNode> potentialNodes = new List<qpNode>();
 
-                foreach (qpNode n in allNodes) {
-                    if (n.traversable) {
-                        potentialNodes.Add(n);
+                foreach (qpNode potentialNode in allNodes) {
+                    if (potentialNode.traversable) {
+                        potentialNodes.Add(potentialNode);
                     }
                 }
 
-                foreach (qpNode n in potentialNodes) {
-                    bool inClosed = closedList.Contains(n);
-                    bool inOpen = openList.Contains(n);
+                foreach (qpNode potentialNode in potentialNodes) {
+                    bool inClosed = closedList.Contains(potentialNode);
+                    bool inOpen = openList.Contains(potentialNode);
 
                     if (!inClosed && !inOpen) {             //Mark candidate as parent if not in open nor closed.
-                        n.SetParent(candidate);
-                        openList.Add(n);
+                        potentialNode.SetParent(candidate);
+                        openList.Add(potentialNode);
                     } else if (inOpen) {                    //But if in open, then calculate which is the better parent: Candidate or current parent.
-                        float math2 = n.GetParent().GetG();
+                        float math2 = potentialNode.GetParent().GetG();
                         float math1 = candidate.GetG();
                         if (math2 > math1) {                //candidate is the better parent as it has a lower combined g value.
-                            n.SetParent(candidate);
+                            potentialNode.SetParent(candidate);
                         }
                     }
                 }
-
+				
                 //Calculate h, g and total
                 if (openList.Count == 0) {
                     break;
@@ -173,9 +174,9 @@ public class qpMoveObject : MonoBehaviour {
                     break;
                 }
 
+                //qpNode currentNode = (closedList.Count > 0) ? closedList[closedList.Count - 1] : null;
                 for (int i = 0; i < openList.Count; i++) {  //the below one-lined for loop,if conditional and method call updates all nodes in openlist.
-                    qpNode current = (closedList.Count > 0) ? closedList[closedList.Count - 1] : null;
-                    openList[i].CalculateTotal(current, end);
+                    openList[i].CalculateTotal(end);
                 }
 
                 openList.Sort(delegate(qpNode node1, qpNode node2) {
@@ -238,22 +239,10 @@ public class qpMoveObject : MonoBehaviour {
         if (Path != null) {
             if (_moveCounter < Path.Count) {
                 Moving = true;
-
-                //Direction Maps
-                qpNode previousNode = (Path.Count > 0) ? Path[_moveCounter - 1] : null;
-                qpNode currentNode = Path[_moveCounter];
-                Vector3 EnterMovementVector = new Vector3(currentNode.GetCoordinates().x - previousNode.GetCoordinates().x, currentNode.GetCoordinates().y - previousNode.GetCoordinates().y, currentNode.GetCoordinates().z - previousNode.GetCoordinates().z);
-                Debug.Log("Enter Movement vector (not normalized): " + EnterMovementVector);
-                EnterMovementVector.Normalize();
-                currentNode._DirectionVector.x = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.x + qpManager.Instance.learningRate * EnterMovementVector.x;
-                currentNode._DirectionVector.y = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.y + qpManager.Instance.learningRate * EnterMovementVector.y;
-                currentNode._DirectionVector.z = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.z + qpManager.Instance.learningRate * EnterMovementVector.z;
-                //
-
-
                 transform.position = Vector3.MoveTowards(transform.position, Path[_moveCounter].GetCoordinates() + Offset, Time.deltaTime * Speed);
                 if (Vector3.Distance(transform.position, Path[_moveCounter].GetCoordinates() + Offset) < SpillDistance)
                 {
+					qpNode currentNode = Path[_moveCounter];
                     PreviousNode = Path[_moveCounter];
                     _moveCounter++;
                     if (_moveCounter < Path.Count) {
@@ -262,11 +251,12 @@ public class qpMoveObject : MonoBehaviour {
                         //Direction Maps
                         Vector3 ExitMovementVector = new Vector3(NextNode.GetCoordinates().x - currentNode.GetCoordinates().x, NextNode.GetCoordinates().y - currentNode.GetCoordinates().y, NextNode.GetCoordinates().z - currentNode.GetCoordinates().z);
                         Debug.Log("Movement vector (not normalized): " + ExitMovementVector);
-                        EnterMovementVector.Normalize();
+                        ExitMovementVector.Normalize();
                         currentNode._DirectionVector.x = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.x + qpManager.Instance.learningRate * ExitMovementVector.x;
                         currentNode._DirectionVector.y = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.y + qpManager.Instance.learningRate * ExitMovementVector.y;
                         currentNode._DirectionVector.z = (1 - qpManager.Instance.learningRate) * currentNode._DirectionVector.z + qpManager.Instance.learningRate * ExitMovementVector.z;
                         //
+
                     } else {
                         FinishedPath();
                     }
