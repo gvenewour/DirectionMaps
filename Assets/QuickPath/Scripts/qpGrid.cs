@@ -188,17 +188,17 @@ public class qpGrid : MonoBehaviour
 
                     if (gridNode != null) {  //Set connection for grid node
                         if ((x - 1) >= 0) {
-                            if (gridNodes[x - 1, y, z] != null) {
+                            if (gridNodes[x - 1, y, z] != null) {       //West
                                 gridNode.SetMutualConnection(gridNodes[x - 1, y, z]);
                             }
 
                             if (y > 0) {
-                                if (gridNodes[x - 1, y - 1, z] != null) {
+                                if (gridNodes[x - 1, y - 1, z] != null) {       
                                     gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z], true);
                                 }
 
                                 if (gridNodes[x - 1, y - 1, z + 1] != null) {
-                                    gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z + 1]);
+                                    gridNode.SetMutualConnection(gridNodes[x - 1, y - 1, z + 1],true);
                                 }
                             }
 
@@ -214,7 +214,7 @@ public class qpGrid : MonoBehaviour
                         }
 
                         if ((z - 1) >= 0) {
-                            if (gridNodes[x, y, z - 1] != null) {
+                            if (gridNodes[x, y, z - 1] != null) {   //South
                                 gridNode.SetMutualConnection(gridNodes[x, y, z - 1]);
                             }
 
@@ -232,20 +232,20 @@ public class qpGrid : MonoBehaviour
                         }
 
                         if (y > 0) {
-                            if (gridNodes[x, y - 1, z] != null) {
+                            if (gridNodes[x, y - 1, z] != null) {       //Down
                                 gridNode.SetMutualConnection(gridNodes[x, y - 1, z]);
                             }
 
                             if (gridNodes[x + 1, y - 1, z] != null) {
-                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z]);
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z], true);
                             }
 
                             if (gridNodes[x, y - 1, z + 1] != null) {
-                                gridNode.SetMutualConnection(gridNodes[x, y - 1, z + 1]);
+                                gridNode.SetMutualConnection(gridNodes[x, y - 1, z + 1], true);
                             }
 
                             if (gridNodes[x + 1, y - 1, z + 1] != null) {
-                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z + 1]);
+                                gridNode.SetMutualConnection(gridNodes[x + 1, y - 1, z + 1], true);
                             }
                         }
                     }
@@ -253,6 +253,7 @@ public class qpGrid : MonoBehaviour
             }
 
         }
+		
         qpManager.Instance.RegisterNodes(allNodes);
         qpManager.Instance.startCoordinates = startCoordinates;
         qpManager.Instance.endCoordinates = endCoordinates;
