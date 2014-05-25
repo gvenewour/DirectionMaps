@@ -17,7 +17,9 @@ public class qpFollowMouseObject : qpMoveObject {
             {
                 if (Moving)
                 {
+                    qpManager.Instance._gridMutex.WaitOne();
                     List<qpNode> prePath = AStar(PreviousNode, qpManager.Instance.FindNodeClosestTo(hit.point));
+                    qpManager.Instance._gridMutex.ReleaseMutex();
                     for (int i = prePath.Count; i > 0; i--)
                     {
                         if (prePath[i - 1] == NextNode)

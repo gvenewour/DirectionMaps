@@ -33,8 +33,10 @@ public class qpPatrolObject : qpMoveObject {
                 Vector3 destination = _forward ? PointsToPatrol[PointsToPatrol.Count - 1] : PointsToPatrol[0];
                 _forward = !_forward;
 
+                qpManager.Instance._gridMutex.WaitOne();
                 base.Start();
                 List<qpNode> prePath = AStar(PreviousNode, qpManager.Instance.FindNodeClosestTo(destination));
+                qpManager.Instance._gridMutex.ReleaseMutex();
                 SetPath(prePath);
             }
         }
@@ -49,10 +51,13 @@ public class qpPatrolObject : qpMoveObject {
         if (!PathfindingBetweenPoints) {
             SetPath(PointsToPatrol);
         } else  {
+            qpManager.Instance._gridMutex.WaitOne();
             List<qpNode> _pathfindingPath = new List<qpNode>();
             for (int i = 0; i < PointsToPatrol.Count - 1; i++) {
+				
                 _pathfindingPath.AddRange(AStar(qpManager.Instance.FindNodeClosestTo(PointsToPatrol[i]), qpManager.Instance.FindNodeClosestTo(PointsToPatrol[i + 1])));
             }
+            qpManager.Instance._gridMutex.ReleaseMutex();
             SetPath(_pathfindingPath);
         }
 	}
